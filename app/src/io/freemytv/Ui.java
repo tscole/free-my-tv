@@ -409,7 +409,8 @@ final class Ui {
     static synchronized DatePattern datePattern(String key) {
         DatePattern pattern = DATE_PATTERNS.get(key);
         if (pattern == null) {
-            String text = tr(key);
+            String text = hours24(key);
+            if (text == null) text = tr(key);
             Locale loc = locale();
             try {
                 new SimpleDateFormat(text, loc);
@@ -439,6 +440,27 @@ final class Ui {
     }
 
     /** "21:47" (in English, "9:47", like the iPhone in the US). */
+    /** config.properties clock=24 (or 12): the times' patterns in that style, whatever the language; null = the language's. */
+    private static String hours24(String key) {
+        String clock = Config.CLOCK.trim();
+        if (clock.equals("24")) {
+            switch (key) {
+                case "format|h:mm": case "format|h:mm a": return "HH:mm";
+                case "format|h a": return "HH:00";
+                default: return null;
+            }
+        }
+        if (clock.equals("12")) {
+            switch (key) {
+                case "format|h:mm": return "h:mm";
+                case "format|h:mm a": return "h:mm a";
+                case "format|h a": return "h a";
+                default: return null;
+            }
+        }
+        return null;
+    }
+
     static String clock(long now) {
         return Ui.datePattern("format|h:mm").format(now);
     }

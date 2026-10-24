@@ -90,10 +90,21 @@ var I18N = (function () {
   function formatDate(key, at) {
     var minute = Math.floor(at / 60000), last = formatted[key];
     if (last && last.minute === minute && last.lang === lang) return last.text;   // the clocks ask every second
-    var d = new Date(at), out = format(tr(key), d, locale);
+    var d = new Date(at), out = format(clockPattern(key) || tr(key), d, locale);
     if (out === null) out = format(key.substring(key.indexOf('|') + 1), d, 'en-US');
     formatted[key] = {minute: minute, lang: lang, text: out};
     return out;
+  }
+
+  /** config.properties clock=24 (or 12): the times in that style, whatever the language (Ui.hours24 on Android). */
+  var CLOCK_PATTERNS = {
+    '24': {'format|h:mm': 'HH:mm', 'format|h:mm a': 'HH:mm', 'format|h a': 'HH:00'},
+    '12': {'format|h:mm': 'h:mm', 'format|h:mm a': 'h:mm a', 'format|h a': 'h a'}
+  };
+
+  function clockPattern(key) {
+    var map = CLOCK_PATTERNS[typeof CONFIG !== 'undefined' && CONFIG.clock ? String(CONFIG.clock) : 'auto'];
+    return map && map[key] ? map[key] : null;
   }
 
   /** The last text of each "format|..." key, by minute (the catalogues' patterns go down to minutes). */
